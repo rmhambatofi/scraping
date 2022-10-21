@@ -10,11 +10,15 @@ class QuotesSpider(scrapy.Spider):
         "https://www.lacentrale.fr/occasion-voiture-marque-volkswagen.html",
     ]
 
-    def parse(self, response):
+    def parse(self, response, **kwargs):
         soup = BeautifulSoup(response.text, features="lxml")
-        pages = soup.find_all("a", {"class": "rch-pagination"})
-        for link_elt in pages:
-            yield response.follow(link_elt['href'], callback=self.parse_list)
+        link_elements = soup.find_all("a", {"class": "searchCard__link"})
+        for link_elt in link_elements:
+            yield response.follow(link_elt, callback=self.parse_info)
+
+        next_btn = soup.find("i", {"class": "cbm-picto--arrowR"}).parent
+        self.log(next_btn.attrs["href"])
+        yield response.follow(next_btn, callback=self.parse)
 
     def parse_list(self, response):
         soup = BeautifulSoup(response.text, features="lxml")
