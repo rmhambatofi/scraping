@@ -10,7 +10,7 @@ class QuotesSpider(scrapy.Spider):
         "https://www.lacentrale.fr/occasion-voiture-marque-volkswagen.html",
     ]
 
-    def parse(self, response, **kwargs):
+    def parse_tmp(self, response, **kwargs):
         soup = BeautifulSoup(response.text, features="lxml")
         link_elements = soup.find_all("a", {"class": "searchCard__link"})
         for link_elt in link_elements:
@@ -20,7 +20,7 @@ class QuotesSpider(scrapy.Spider):
         self.log(next_btn.attrs["href"])
         yield response.follow(next_btn, callback=self.parse)
 
-    def parse_list(self, response):
+    def parse(self, response):
         soup = BeautifulSoup(response.text, features="lxml")
         link_elements = soup.find_all("a", {"class": "searchCard__link"})
         for link_elt in link_elements:
@@ -36,9 +36,11 @@ class QuotesSpider(scrapy.Spider):
             "price": unicodedata.normalize("NFKC", soup.find("span", {"class": "cbm__priceWrapper"}).get_text().strip())
         }
         features_list = soup.find("div", {"class": "cbm-moduleInfos__informationList"}).find_all("li")
+        features = dict()
         if features_list is not None:
             for feature in features_list:
-                car[feature.span.button.get_text()] = feature.span.next_sibling.get_text()
+                features[feature.span.button.get_text()] = feature.span.next_sibling.get_text()
+            car["features"] = features
 
         self.log(car)
 
